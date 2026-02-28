@@ -21,7 +21,7 @@ SECURE_BOOT_PKEY="${SECURE_BOOT_PKEY:-../../ec_private_key.pem}"
 #do
     board_name="waveshare_rp2350_one"
     rm -rf -- ./*
-    PICO_SDK_PATH="${PICO_SDK_PATH}" cmake .. -DPICO_BOARD=$board_name -DSECURE_BOOT_PKEY=${SECURE_BOOT_PKEY} -DENABLE_EDDSA=1
+    PICO_SDK_PATH="${PICO_SDK_PATH}" cmake .. -DPICO_BOARD=$board_name -DSECURE_BOOT_PKEY=${SECURE_BOOT_PKEY} -DENABLE_EDDSA=1 -DVIDPID=Yubikey5
     make -j`nproc`
     mv pico_fido2.uf2 ../release/pico_fido2_$board_name-$SUFFIX.uf2
 #done
