@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [weact_studio_rp2040_16mb]
+        board: [waveshare_rp2350_zero]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -40,5 +40,11 @@ jobs:
         run: |
           mkdir -p build_ci
           cd build_ci
-          cmake .. -DPICO_BOARD=waveshare_rp2350_zero
+          cmake .. -DPICO_BOARD=${{ matrix.board }}
           make -j$(nproc)
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico_fido2_${{ matrix.board }}
+          path: build_ci/pico_fido2.uf2
