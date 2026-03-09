@@ -1,42 +1,42 @@
-name: "Nightly deploy"
+name: "Build"
 
 on:
-  schedule:
-    - cron: '0 2 * * *'
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  nightly:
-    name: Deploy nightly
+  build:
+    name: Build ${{ matrix.board }}
     strategy:
       fail-fast: false
       matrix:
-        refs: [main]
+        board: [weact_studio_rp2040_16mb]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.refs }}
           submodules: 'recursive'
-      - name: Restore private key
+
+      - name: Install dependencies
         run: |
-          echo "${{ secrets.PRIVATE_KEY_B64 }}" | base64 -d > private.pem
-          chmod 600 private.pem
-      - name : Build
+          sudo apt update
+          sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Clone and build pico-sdk
+        run: |
+          git clone https://github.com/raspberrypi/pico-sdk
+          cd pico-sdk
+          git checkout tags/2.1.1
+          git submodule update --init
+          cd ..
+      - name: Build firmware
         env:
-          PICO_SDK_PATH: ../pico-sdk
-          SECURE_BOOT_PKEY: ../private.pem
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
         run: |
-           ./workflows/autobuild.sh pico
-           ./build_pico_fido2.sh
-           ./workflows/autobuild.sh esp32
-      - name: Delete private key
-        run: rm private.pem
-      - name: Update nightly release
-        uses: pyTooling/Actions/releaser@main
-        with:
-          tag: nightly-${{ matrix.refs }}
-          rm: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: release/*.*
+          mkdir -p build_ci
+          cd build_ci
+          cmake .. -DPICO_BOARD=waveshare_rp2350_zero
+          make -j$(nproc)
