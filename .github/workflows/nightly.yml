@@ -18,9 +18,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-
+      - name: Fix submodule URLs and update
+        run: |
+          sed -i 's|url = \.\./|url = https://github.com/lizzzhh/|g' .gitmodules
+          git submodule sync
+          git submodule update --init --recursive
       - name: Install dependencies
         run: |
           sudo apt update
